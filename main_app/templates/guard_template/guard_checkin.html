@@ -1,0 +1,249 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}Guard Check In/Out{% endblock page_title %}
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <!-- small box -->
+                <div class="small-box bg-primary" id="checkInOutContainer">
+                    <div class="inner">
+                        <h3 id="checkInOutTitle">Check In</h3>
+                        <p id="checkInOutText">Click to Check In</p>
+                    </div>
+                    <div class="icon">
+                        <i class="ion ion-checkmark" id="checkInOutIcon"></i>
+                    </div>
+                    <button class="btn btn-block btn-primary" id="checkInOutButton" disabled>Check In <i class="fas fa-arrow-circle-right"></i></button>
+                </div>
+            </div>
+        </div>
+        <!-- Placeholder for the result message -->
+        <div id="checkInOutResult"></div>
+        
+        <!-- Placeholder for location permission message -->
+        <div id="locationPermissionMessage" class="alert alert-danger d-none" role="alert">
+            Location services are disabled. Please enable them to use the check-in feature and refresh this page.
+        </div>
+
+        <!-- Map container -->
+        <div id="map" style="height: 400px; margin-top: 20px;"></div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+<script>
+    let checkInOutInterval;
+    let guardLatitude, guardLongitude;
+    let map, marker, siteMarker, siteCircle;
+    const siteLatitude = {{ site_latitude|default:"null" }};
+    const siteLongitude = {{ site_longitude|default:"null" }};
+    const siteRadius = {{ site_radius|default:"50" }}; // Use the radius value from the context
+
+    // Define custom icons
+    const guardIcon = L.icon({
+        iconUrl: 'https://maps.gstatic.com/intl/en_us/mapfiles/ms/micons/man.png',
+        iconSize: [32, 32]
+    });
+
+    const siteIcon = L.icon({
+        iconUrl: 'https://maps.gstatic.com/intl/en_us/mapfiles/ms/micons/green-dot.png',
+        iconSize: [32, 32]
+    });
+
+    // Initialize the map
+    function initializeMap() {
+        map = L.map('map').setView([27.7, 85.3], 15); // Centered on a sample location
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Add the site location marker and radius circle if site coordinates are available
+        if (siteLatitude && siteLongitude) {
+            siteMarker = L.marker([siteLatitude, siteLongitude], { icon: siteIcon })
+                .addTo(map)
+                .bindPopup('<span style="color: green;">Your site location</span>')
+                .openPopup();
+
+            siteCircle = L.circle([siteLatitude, siteLongitude], {
+                color: 'green',
+                fillColor: 'green',
+                fillOpacity: 0.2,
+                radius: siteRadius
+            }).addTo(map);
+        }
+    }
+
+    // Function to update the guard's location on the map
+    function updateMap(latitude, longitude) {
+        if (marker) {
+            marker.setLatLng([latitude, longitude])
+                .bindPopup('<span style="color: blue;">You are currently here</span>')
+                .openPopup();
+        } else {
+            marker = L.marker([latitude, longitude], { icon: guardIcon })
+                .addTo(map)
+                .bindPopup('<span style="color: blue;">You are currently here</span>')
+                .openPopup();
+        }
+        map.setView([latitude, longitude], 15);
+    }
+
+    // Function to request location permissions
+    function requestLocationPermission() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                guardLatitude = position.coords.latitude;
+                guardLongitude = position.coords.longitude;
+                console.log(`Location permissions granted. Latitude: ${guardLatitude}, Longitude: ${guardLongitude}`);
+                updateMap(guardLatitude, guardLongitude);
+                document.getElementById('checkInOutButton').disabled = false;
+                document.getElementById('locationPermissionMessage').classList.add('d-none');
+            }, handleLocationError);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    // Function to handle location errors
+    function handleLocationError(error) {
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                document.getElementById('locationPermissionMessage').classList.remove('d-none');
+                break;
+            case error.POSITION_UNAVAILABLE:
+                alert("Location information is unavailable.");
+                break;
+            case error.TIMEOUT:
+                alert("The request to get user location timed out.");
+                break;
+            case error.UNKNOWN_ERROR:
+                alert("An unknown error occurred.");
+                break;
+        }
+    }
+
+    // Function to send location data to the server
+    function sendLocationData(action) {
+        const csrfToken = "{{ csrf_token }}";
+        const guardEmail = "{{ request.user.email }}";
+
+        fetch("{% url 'check_in' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                guard_email: guardEmail,
+                latitude: guardLatitude,
+                longitude: guardLongitude,
+                action: action
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('checkInOutResult').innerHTML = data.message;
+
+            if (data.success) {
+                if (action === 'checkin') {
+                    document.getElementById('checkInOutContainer').classList.replace('bg-primary', 'bg-danger');
+                    document.getElementById('checkInOutButton').classList.replace('btn-primary', 'btn-danger');
+                    document.getElementById('checkInOutButton').innerHTML = 'Check Out <i class="fas fa-arrow-circle-right"></i>';
+                    document.getElementById('checkInOutTitle').innerHTML = 'Check Out';
+                    document.getElementById('checkInOutText').innerHTML = 'Click to Check Out';
+                    document.getElementById('checkInOutIcon').classList.replace('ion-checkmark', 'ion-close');
+                    document.getElementById('checkInOutResult').innerText = 'You are checked in!';
+                    startLocationInterval();
+                } else if (action === 'checkout') {
+                    document.getElementById('checkInOutContainer').classList.replace('bg-danger', 'bg-primary');
+                    document.getElementById('checkInOutButton').classList.replace('btn-danger', 'btn-primary');
+                    document.getElementById('checkInOutButton').innerHTML = 'Check In <i class="fas fa-arrow-circle-right"></i>';
+                    document.getElementById('checkInOutTitle').innerHTML = 'Check In';
+                    document.getElementById('checkInOutText').innerHTML = 'Click to Check In';
+                    document.getElementById('checkInOutIcon').classList.replace('ion-close', 'ion-checkmark');
+                    clearInterval(checkInOutInterval);
+                    document.getElementById('checkInOutResult').innerText = 'You have been checked out!';
+                }
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+
+    // Function to start the interval for sending location data every 15 sec
+    function startLocationInterval() {
+        clearInterval(checkInOutInterval); // Clear any existing interval
+        checkInOutInterval = setInterval(() => {
+            sendLocationData('update');
+        }, 15000); // 15000 milliseconds = 15 sec
+    }
+
+    // Function to handle check-in/check-out
+    function checkInOut() {
+        const guardEmail = "{{ request.user.email }}";
+        fetch(`/guard_status/${guardEmail}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.is_checked_in) {
+                    sendLocationData('checkout');
+                } else {
+                    sendLocationData('checkin');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    // Function to initialize the check-in state
+    function initializeState() {
+        const guardEmail = "{{ request.user.email }}";
+        
+        fetch(`/guard_status/${guardEmail}/`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(`Initialize state: Guard is checked in: ${data.is_checked_in}, Guard is checked out: ${data.is_checked_out}`);
+                if (data.is_checked_in) {
+                    document.getElementById('checkInOutContainer').classList.add('bg-danger');
+                    document.getElementById('checkInOutButton').classList.add('btn-danger');
+                    document.getElementById('checkInOutButton').innerHTML = 'Check Out <i class="fas fa-arrow-circle-right"></i>';
+                    document.getElementById('checkInOutTitle').innerHTML = 'Check Out';
+                    document.getElementById('checkInOutText').innerHTML = 'Click to Check Out';
+                    document.getElementById('checkInOutIcon').classList.add('ion-close');
+                    document.getElementById('checkInOutResult').innerText = 'You are checked in!';
+                    startLocationInterval();
+                } else {
+                    document.getElementById('checkInOutContainer').classList.add('bg-primary');
+                    document.getElementById('checkInOutButton').classList.add('btn-primary');
+                    document.getElementById('checkInOutButton').innerHTML = 'Check In <i class="fas fa-arrow-circle-right"></i>';
+                    document.getElementById('checkInOutTitle').innerHTML = 'Check In';
+                    document.getElementById('checkInOutText').innerHTML = 'Click to Check In';
+                    document.getElementById('checkInOutIcon').classList.add('ion-checkmark');
+                    document.getElementById('checkInOutResult').innerText = 'You are checked out!';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    // Request location permissions and initialize state when the document is ready
+    document.addEventListener('DOMContentLoaded', (event) => {
+        initializeMap();
+        requestLocationPermission();
+        initializeState();
+    });
+
+    // Add event listener to the button
+    document.getElementById('checkInOutButton').addEventListener('click', checkInOut);
+
+</script>
+{% endblock custom_js %}

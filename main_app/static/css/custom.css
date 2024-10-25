@@ -1,0 +1,83 @@
+.sidebar-bg {
+    background-color: #bae0ff !important;
+    border: none !important;
+    /* margin: 0 !important; */
+}
+
+
+.fontblack {
+    color: #1f1f1f !important;
+}
+
+.nav-item .active {
+    background-color: #e6f4ff !important;
+}
+
+.nav-item .active .nav-icon {
+    color: #1677ff !important;
+}
+
+.nav-item .active .fontblack {
+    color: #1677ff !important;
+}
+
+
+.nav-link:hover {
+    background-color: #f0f0f0 !important;
+}
+
+body::-webkit-scrollbar {
+    width: 0.5rem !important;
+}
+
+body::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+body::-webkit-scrollbar-thumb {
+    background-color: darkgrey !important;
+    outline: 1px solid slategrey !important;
+    border-radius: 10px;
+}
+
+/* .nav-link:hover .nav-icon {
+    color: #0958d9 !important;
+} */
+
+/* .nav-link:hover .fontblack {
+    color: #0958d9 !important;
+} */
+
+.hide {
+    display: none !important;
+}
+
+.formflex {
+    display: flex !important;
+    flex-wrap: wrap !important;
+}
+
+.red {
+    background-color: red !important;
+}
+
+.profile {
+    height: 30px !important;
+    width: 30px !important;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.totalguardsbg {
+    background-color: #2ecc71 !important;
+
+}
+
+.totalguardsofficerbg {
+    background-color: #1abc9c !important;
+}
+
+
+.totalguardsofficeruserbg {
+    background-color: #9b59b6 !important;
+}

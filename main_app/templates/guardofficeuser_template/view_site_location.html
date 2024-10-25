@@ -1,0 +1,49 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ page_title }}</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Site Name:</strong> {{ site.name }}</p>
+                        <div id="map-container" style="height: 400px; width: 100%; border: 1px solid #ddd;">
+                            <div id="map" style="height: 100%; width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var map = L.map('map').setView([{{ site.latitude }}, {{ site.longitude }}], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+        }).addTo(map);
+
+        L.marker([{{ site.latitude }}, {{ site.longitude }}]).addTo(map)
+            .bindPopup("{{ site.name }}")
+            .openPopup();
+
+        var radius = {{ site.radius }};
+        L.circle([{{ site.latitude }}, {{ site.longitude }}], {
+            color: 'green',
+            fillColor: 'green',
+            fillOpacity: 0.5,
+            radius: radius
+        }).addTo(map);
+    });
+</script>
+{% endblock content %}

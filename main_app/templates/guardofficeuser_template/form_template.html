@@ -1,0 +1,31 @@
+<form role="form" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="card-body">
+
+        {% for field in guard_form  %}
+        <div class="form-group">
+            {{field.errors}}
+            {{field.label_tag}}
+            {% if field.name == 'guard_office' %}
+            <input type="hidden" name="{{ field.name }}" value="{{ request.user.guardofficeuser.guard_office.id }}">
+            <input type="text" class="form-control" value="{{ request.user.guardofficeuser.guard_office }}" readonly>
+            {% else %}
+            {{field}}
+            {% endif %}
+        </div>
+        {% endfor %}
+
+    </div>
+    <!-- /.card-body -->
+
+    <div class="card-footer">
+        <button type="submit" class="btn btn-primary btn-block">
+            {% if button_text %}
+            {{button_text}}
+            {% else %}
+            Submit
+            {% endif %}
+
+        </button>
+    </div>
+</form>

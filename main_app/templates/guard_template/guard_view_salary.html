@@ -1,0 +1,45 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}
+  {{ page_title }}
+{% endblock %}
+
+{% block content %}
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <!-- general form elements -->
+
+          <!-- /.card -->
+          <div class="card card-primary">
+            <div class="table p-2">
+              <table class="table table-bordered">
+                <tr>
+                  <th>ID</th>
+                  <th>Site</th>
+                  <th>Base Salary</th>
+                </tr>
+                {% for salary in salarys %}
+                  <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ salary.site }}</td>
+                    <td>{{ salary.base }}</td>
+                  </tr>
+                {% endfor %}
+                <tr>
+                  <td colspan="2">
+                    <strong>Total Salary</strong>
+                  </td>
+                  <td>
+                    <strong>{{ total_salary }}</strong>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

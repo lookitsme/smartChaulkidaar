@@ -1,0 +1,71 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Profile Image -->
+                <div class="card card-primary card-outline">
+                    <div class="card-body box-profile">
+                        <div class="text-center">
+                            {% if guard.admin.profile_pic %}
+                            <img class="profile-user-img img-fluid img-circle" src="{{ guard.admin.profile_pic.url }}" alt="Profile Picture">
+                            {% else %}
+                            <img class="profile-user-img img-fluid img-circle" src="{% static 'admin/image/default.jpg' %}" alt="Default Profile Picture">
+                            {% endif %}
+                        </div>
+                        <h3 class="profile-username text-center">{{ guard.admin.first_name }} {{ guard.admin.last_name }}</h3>
+                        <p class="text-muted text-center">{{ guard.guard_office.name }}</p>
+                        <ul class="list-group list-group-unbordered mb-3">
+                            <li class="list-group-item">
+                                <b>Email</b> <a class="float-right">{{ guard.admin.email }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Gender</b> <a class="float-right">{{ guard.admin.gender }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Site</b> <a class="float-right">{{ guard.site.name }}</a>
+                            </li>
+                            <li class="list-group-item">
+                                <b>Average Rating</b> <a class="float-right">{{ guard.average_rating }} ({{ guard.review_count }} reviews)</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+            <div class="col-md-8">
+                <!-- Reviews Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Reviews</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        {% if reviews %}
+                        <ul class="list-group">
+                            {% for review in reviews %}
+                            <li class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">Rating: {{ review.rating }} stars</h5>
+                                    <small>Reviewed by Anonymous</small> <!-- Always show as Anonymous -->
+                                </div>
+                                <p class="mb-1">{{ review.review }}</p>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p>No reviews yet.</p>
+                        {% endif %}
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+{% endblock content %}

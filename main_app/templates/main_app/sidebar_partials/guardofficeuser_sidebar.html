@@ -1,0 +1,184 @@
+{% load static %}
+<!-- Brand Logo -->
+<a href="#" class="brand-link sidebar-bg">
+  <img src="{% static 'dist/img/AdminLTELogo.png' %} " alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: 0.8" />
+  <span class="brand-text font-weight-light">{{ name }} Panel</span>
+</a>
+
+<!-- Sidebar -->
+<div class="sidebar sidebar-bg">
+  <!-- Sidebar user panel (optional) -->
+
+  <!-- Sidebar Menu -->
+  <nav class="mt-2">
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+      <li class="nav-item">
+        {% url 'guardofficeuser_home' as guardofficeuser_home %}
+        <a href="{{ guardofficeuser_home }}" class="nav-link {% if guardofficeuser_home == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-home fontblack"></i>
+          <p class="fontblack">Home</p>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        {% url 'guardofficeuser_view_profile' as guardofficeuser_view_profile %}
+        <a href="{{ guardofficeuser_view_profile }}" class="nav-link {% if guardofficeuser_view_profile == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-user fontblack"></i>
+          <p class="fontblack">View/Edit Profile</p>
+        </a>
+      </li>
+      <li class="nav-item">
+        {% url 'guardofficeuser_add_client' as add_client %}
+        <a href="{{ add_client }}" class="nav-link {% if add_client == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-user-plus fontblack"></i>
+          <p class="fontblack">Add Client</p>
+        </a>
+      </li>
+      <li class="nav-item">
+        {% url 'guardofficeuser_manage_client' as manage_client %}
+        <a href="{{ manage_client }}" class="nav-link {% if manage_client == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-user-cog fontblack"></i>
+          <p class="fontblack">Manage Client</p>
+        </a>
+      </li>
+
+      <!-- Site Section -->
+      <li class="nav-item has-treeview">
+        <a href="#" class="nav-link">
+          <i class="nav-icon fas fa-building fontblack"></i>
+          <p class="fontblack">
+            Site
+            <i class="right fas fa-angle-left"></i>
+          </p>
+        </a>
+        <ul class="nav nav-treeview">
+          <li class="nav-item">
+            {% url 'add_site' as add_site %}
+            <a href="{{ add_site }}" class="nav-link {% if add_site == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-plus fontblack"></i>
+              <p class="fontblack">Add Site</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            {% url 'manage_site' as manage_site %}
+            <a href="{{ manage_site }}" class="nav-link {% if manage_site == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-cogs fontblack"></i>
+              <p class="fontblack">Manage Sites</p>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <li class="nav-item has-treeview">
+        <a href="#" class="nav-link">
+          <i class="nav-icon fas fa-user-plus fontblack"></i>
+          <p class="fontblack">
+            Guard
+            <i class="right fas fa-angle-left"></i>
+          </p>
+        </a>
+        <ul class="nav nav-treeview">
+          <li class="nav-item">
+            {% url 'guardofficeuser_add_guard' as add_guard %}
+            <a href="{{ add_guard }}" class="nav-link {% if add_guard == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-user-plus fontblack"></i>
+              <p class="fontblack">Add Guard</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            {% url 'add_guard_bulk' as add_guard_bulk %}
+            <a href="{{ add_guard_bulk }}" class="nav-link {% if add_guard_bulk == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-user fontblack"></i>
+              <p class="fontblack">Add Guards in Bulk</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            {% url 'guardofficeuser_manage_guard' as manage_guard %}
+            <a href="{{ manage_guard }}" class="nav-link {% if manage_guard == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-user-cog fontblack"></i>
+              <p class="fontblack">Manage Guard</p>
+            </a>
+          </li>
+        </ul>
+      </li>
+      {% url 'guard_locations' as guard_locations_url %}
+      <li class="nav-item">
+        <a href="{{ guard_locations_url }}" class="nav-link {% if request.path == guard_locations_url %} active {% endif %}">
+          <i class="nav-icon fas fa-map-marker-alt fontblack"></i>
+          <p class="fontblack">Guard Locations</p>
+        </a>
+      </li>
+      <li class="nav-item has-treeview">
+        <a href="#" class="nav-link">
+          <i class="nav-icon fas fa-money-bill-wave fontblack"></i>
+          <p class="fontblack">
+            Salary
+            <i class="right fas fa-angle-left"></i>
+          </p>
+        </a>
+        <ul class="nav nav-treeview">
+          <li class="nav-item">
+            {% url 'guardofficeuser_add_salary' as guardofficeuser_add_salary %}
+            <a href="{{ guardofficeuser_add_salary }}" class="nav-link {% if guardofficeuser_add_salary == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-plus fontblack"></i>
+              <p class="fontblack">Add Salary</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            {% url 'edit_guard_salary' as edit_guard_salary %}
+            <a href="{{ edit_guard_salary }}" class="nav-link {% if edit_guard_salary == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-edit fontblack"></i>
+              <p class="fontblack">Edit Salary</p>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <li class="nav-item has-treeview">
+        <a href="#" class="nav-link">
+          <i class="nav-icon fas fa-chart-bar fontblack"></i>
+          <p class="fontblack">
+            Attendance
+            <i class="right fas fa-angle-left"></i>
+          </p>
+        </a>
+        <ul class="nav nav-treeview">
+          <li class="nav-item">
+            {% url 'guardofficeuser_take_attendance' as guardofficeuser_take_attendance %}
+            <a href="{{ guardofficeuser_take_attendance }}" class="nav-link {% if guardofficeuser_take_attendance == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-calendar-check fontblack"></i>
+              <p class="fontblack">Take Attendance</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            {% url 'guardofficeuser_update_attendance' as guardofficeuser_update_attendance %}
+            <a href="{{ guardofficeuser_update_attendance }}" class="nav-link {% if guardofficeuser_update_attendance == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-calendar-alt fontblack"></i>
+              <p class="fontblack">View/Update Attendance</p>
+            </a>
+          </li>
+        </ul>
+      </li>
+      <li class="nav-item">
+        {% url 'guardofficeuser_view_notification' as guardofficeuser_view_notification %}
+        <a href="{{ guardofficeuser_view_notification }}" class="nav-link {% if guardofficeuser_view_notification == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-bell fontblack"></i>
+          <p class="fontblack">View Notifications</p>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        {% url 'view_guard_leave' as view_guard_leave %}
+        <a href="{{ view_guard_leave }}" class="nav-link {% if view_guard_leave == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-user-shield fontblack"></i>
+          <p class="fontblack">Guard Leave</p>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        {% url 'guardofficeuser_feedback' as guardofficeuser_feedback %}
+        <a href="{{ guardofficeuser_feedback }}" class="nav-link {% if guardofficeuser_feedback == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-comment fontblack"></i>
+          <p class="fontblack">Application Feedback</p>
+        </a>
+      </li>

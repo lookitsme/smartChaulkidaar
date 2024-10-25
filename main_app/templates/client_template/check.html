@@ -1,0 +1,29 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}Guard Profile{% endblock page_title %}
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Guard Profile</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <p><strong>Full Name:</strong> {{ guard.admin.first_name }} {{ guard.admin.last_name }}</p>
+                        <p><strong>Email:</strong> {{ guard.admin.email }}</p>
+                        <p><strong>Guard Office:</strong> {{ guard.guard_office.name }}</p>
+                        <p><strong>Site:</strong> {{ guard.site.name }}</p>
+                        <p><strong>Average Rating:</strong> {{ guard.average_rating }} ({{ guard.review_count }} reviews)</p>
+                        <!-- Add other guard details here -->
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+{% endblock content %}

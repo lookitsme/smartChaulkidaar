@@ -1,0 +1,85 @@
+{% extends 'main_app/base.html' %}
+{% block page_title %}
+  {{ page_title }}
+{% endblock %}
+{% block content %}
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">{{ page_title }}</h3>
+              <!--    <div class="card-tools">
+                            <button type="button" class="btn btn-tool" id="clear-all-notifications">
+                                Clear All Notifications
+                            </button>
+                        </div>    -->
+            </div>
+            <div class="card-body table-responsive p-0">
+              <table class="table table-hover text-nowrap">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Message</th>
+                  </tr>
+                </thead>
+                <tbody id="notifications-table">
+                  {% for notification in notifications %}
+                    <tr>
+                      <td>{{ notification.created_at }}</td>
+                      <td>{{ notification.message }}</td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="2">No notifications found.</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block custom_js %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      function clearNotifications() {
+        fetch("{% url 'clear_notifications' %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // Update the notifications table
+              document.getElementById('notifications-table').innerHTML = `
+                                <tr>
+                                    <td colspan="2">No notifications found.</td>
+                                </tr>
+                            `
+              // Clear the notifications dropdown
+              const notificationsList = document.getElementById('notifications-list')
+              notificationsList.innerHTML = `
+                                <a href="#" class="dropdown-item">No new notifications</a>
+                            `
+              const notificationCount = document.getElementById('notification-count')
+              notificationCount.textContent = ''
+            }
+          })
+      }
+    
+      document.getElementById('clear-all-notifications').addEventListener('click', function (event) {
+        event.preventDefault()
+        clearNotifications()
+      })
+    })
+  </script>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    {% comment %} <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div> {% endcomment %}
+
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Site</label>
+                            <select name="site" class="form-control" id='site'>
+                                <option value="">----</option>
+                                {% for site in sites %}
+                                <option value="{{site.id}}">{{site.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                        <button type="button" id='fetch_guard' class="btn btn-primary btn-block">Fetch Guards</button>
+                        <div class="form-group" id="guard_data"></div>
+                    </div>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    $(document).ready(function () {
+        $("#fetch_guard").click(function () {
+            var site = $("#site").val();
+            $("#guard_data").html(null);
+            if (site.length == 0) {
+                alert("Please select a site");
+                return false;
+            }
+            $.ajax({
+                url: "{% url 'get_guards' %}",
+                type: 'POST',
+                data: {
+                    site: site,
+                    csrfmiddlewaretoken: csrftoken
+                },
+                success: function(response) {
+                    var json_data = response;
+                    if (json_data.length < 1) {
+                        alert("No data to display");
+                    } else {
+                        var div_data = "<hr/><div class='form-group'></div><div class='form-group'> <label>Attendance Date</label><input type='date' class='form-control' name='attendance_date' id='attendance_date'><div class='row'>";
+                        for (var key in json_data) {
+                            div_data += "<div class='col-lg-3'><div class='form-check custom-control custom-checkbox'><input type='checkbox' class='custom-control-input' checked='checked' name='guard_data[]' value=" + json_data[key]['id'] + " id='checkbox" + json_data[key]['id'] + "' /> <label for='checkbox" + json_data[key]['id'] + "' class='custom-control-label'>" + json_data[key]['name'] + "</label><br/><label>Total Hours</label><input type='number' step='0.01' name='hours_" + json_data[key]['id'] + "' class='form-control' value='8' /></div></div>";
+                        }
+                        div_data += "</div></div>";
+                        div_data += "<div class='form-group'><button id='save_attendance' class='btn btn-success' type='button'>Save Attendance</button></div>";
+                        $("#guard_data").html(div_data);
+                    }
+                },
+                error: function(response) {
+                    alert("Error in fetching guards");
+                }
+            });
+        });
+
+        $(document).on('click', '#save_attendance', function () {
+            var guard_data = $("input[name='guard_data[]']").map(function () {
+                return {
+                    'id': $(this).val(), 
+                    'status': $(this).is(":checked") ? 1 : 0,
+                    'hours': $("input[name='hours_" + $(this).val() + "']").val() || '8'
+                };
+            }).get();
+            
+            var invalidHours = guard_data.some(function(guard) {
+                return parseFloat(guard.hours) > 24;
+            });
+
+            if (invalidHours) {
+                alert("Hours cannot exceed 24 for any given day.");
+                return false;
+            }
+
+            var attendance_date = $('#attendance_date').val();
+            if (attendance_date.length < 10) {
+                alert("Select date");
+                return false;
+            }
+
+            guard_data = JSON.stringify(guard_data);
+            var site = $("#site").val();
+            $.ajax({
+                url: "{% url 'save_attendance' %}",
+                type: 'POST',
+                data: {
+                    date: attendance_date,
+                    guard_ids: guard_data,
+                    site: site,
+                    csrfmiddlewaretoken: csrftoken
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert("Saved");
+                    } else if (response.error) {
+                        alert(response.error);
+                    } else {
+                        alert("Error. Please try again");
+                    }
+                    location.reload();
+                },
+                error: function(response) {
+                    alert("Error in saving attendance");
+                }
+            });
+        });
+    });
+</script>
+{% endblock custom_js %}

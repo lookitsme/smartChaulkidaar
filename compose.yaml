@@ -1,0 +1,23 @@
+
+services:
+  django:
+    build: .
+    command: watchmedo auto-restart --directory=./ --pattern="*.py" --recursive -- python manage.py runserver 0.0.0.0:2752
+    volumes:
+      - .:/app:consistent
+    ports:
+      - "2752:2752"
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:latest
+
+    environment:
+      - POSTGRES_DB=smartpatrol
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=8858
+      
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:

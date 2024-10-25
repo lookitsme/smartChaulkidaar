@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartMaps</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <style>
+        /* Custom CSS for map container */
+        #map-container {
+            display: flex;
+            border: 4px solid #ccc; /* Increased border size */
+            padding: 20px; /* Increased padding */
+            margin-bottom: 20px;
+        }
+
+        /* Custom CSS for map */
+        #map {
+            flex: 1; /* Occupy remaining space */
+            height: 600px; /* Set height to 600px */
+        }
+
+        /* Custom CSS for right rectangle */
+        #right-rectangle {
+            width: 200px; /* Width of the rectangle */
+            background-color: #f0f0f0; /* Background color */
+            border: 1px solid #ccc; /* Border */
+            padding: 10px; /* Padding */
+            overflow-y: auto; /* Enable vertical scroll if needed */
+        }
+
+        /* Custom CSS for headline */
+        .map-heading {
+            font-size: 24px;
+            margin-bottom: 10px;
+            width: 100%; /* Set width to 100% */
+            text-align: center; /* Center align the heading */
+        }
+
+        /* Custom CSS for search input */
+        #search-input {
+            width: calc(100% - 20px); /* Adjusted width */
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <h2 class="map-heading">Guards Location</h2> <!-- Moved heading outside map-container -->
+    <div id="map-container"> <!-- Removed inline width style -->
+        <div id="map"></div> <!-- Removed inline height style -->
+        <div id="right-rectangle">
+            <input type="text" id="search-input" class="form-control" placeholder="Search..."> <!-- Search input -->
+            <!-- Content for the right rectangle (guard names, etc.) -->
+            <!-- Example content -->
+            <p>Guard 1</p>
+            <p>Guard 2</p>
+            <p>Guard 3</p>
+            <!-- Add more guard names as needed -->
+        </div>
+    </div>
+</div>
+
+{% block content %}
+{% endblock %}
+
+</body>
+</html>

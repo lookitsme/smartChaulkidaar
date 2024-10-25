@@ -1,0 +1,259 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    {% comment %} <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                    </div> {% endcomment %}
+
+                    <!-- /.card-header -->
+                    <!-- form start -->
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Site</label>
+                            <select name="site" class="form-control" id='site'>
+                                <option value="">----</option>
+                                {% for site in sites %}
+                                <option value="{{site.id}}">{{site.name}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <div style="display: none;" class="alert alert-danger" id='error_attendance'></div>
+                            <div class="alert alert-success" id='success_attendance' style="display: none;"></div>
+                            <button type="button" id='fetch_attendance' class="btn btn-primary btn-block">Fetch Attendance</button>
+                        </div>
+                        <div class="form-group" style="display: none;" id="attendance_block">
+                            <div class="form-group">
+                                <label>Start Date</label>
+                                <input type="date" id="start_date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>End Date</label>
+                                <input type="date" id="end_date" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <div id="fetch_guard_block" style="display: none;">
+                                    <button type="button" id='fetch_guard' class="btn btn-primary btn-block">Fetch Employees</button>
+                                </div>
+                                <div id='guard_data' class="card-footer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    function setMinDateForEndDate() {
+        var startDate = document.getElementById("start_date").value;
+        var endDateInput = document.getElementById("end_date");
+        endDateInput.min = startDate;
+    }
+
+    $(document).ready(function () {
+        $("#start_date").change(function () {
+            setMinDateForEndDate();
+        });
+
+        $("#end_date").change(function () {
+            var startDate = document.getElementById("start_date").value;
+            var endDate = document.getElementById("end_date").value;
+            if (endDate < startDate) {
+                alert("End date cannot be before start date");
+                document.getElementById("end_date").value = "";
+            }
+        });
+
+        $("#fetch_attendance").click(function () {
+            var site = $("#site").val();
+            if (site.length < 1) {
+                $("#error_attendance").html("Kindly choose a site");
+                $("#attendance_block").hide();
+                $("#error_attendance").show();
+                return false;
+            }
+            $.ajax({
+                url: "{% url 'get_attendance' %}",
+                type: 'POST',
+                data: {
+                    site: site,
+                    csrfmiddlewaretoken: csrftoken
+                },
+                success: function(response) {
+                    var json_data = response;
+                    if (json_data.length > 0) {
+                        $("#error_attendance").hide();
+                        $("#attendance_block").show();
+                        $("#fetch_guard_block").show();
+                    } else {
+                        $("#error_attendance").html("No attendance data found for specified site");
+                        $("#error_attendance").show();
+                        $("#attendance_block").hide();
+                    }
+                },
+                error: function(response) {
+                    console.error("Error while fetching data: ", response.responseText);
+                    $("#error_attendance").html("Error while fetching data. Please try again.");
+                    $("#error_attendance").show();
+                    $("#attendance_block").hide();
+                }
+            });
+        });
+
+        $("#fetch_guard").click(function () {
+            var start_date = $("#start_date").val();
+            var end_date = $("#end_date").val();
+            var site = $("#site").val();
+            $("#guard_data").html(null);
+            if (start_date.length == 0 || end_date.length == 0) {
+                alert("Please choose a start date and an end date");
+                $("#save_attendance").hide();
+                return false;
+            }
+            $.ajax({
+                url: "{% url 'get_guard_attendance' %}",
+                type: 'POST',
+                data: {
+                    start_date: start_date,
+                    end_date: end_date,
+                    site: site,
+                    csrfmiddlewaretoken: csrftoken
+                },
+                success: function(response) {
+                    var json_data = response;
+                    if (json_data.length < 1) {
+                        alert("No data to display");
+                        $("#save_attendance").hide();
+                    } else {
+                        $("#save_attendance").show();
+                        var dates = Object.keys(json_data[0].attendance);
+                        var table_data = `
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Guard Name</th>`;
+                        for (var date of dates) {
+                            table_data += `<th>${date}</th>`;
+                        }
+                        table_data += `
+                                        <th>Total Hours</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                        for (var key in json_data) {
+                            var guard = json_data[key];
+                            table_data += `
+                                <tr>
+                                    <td>${guard.name}</td>`;
+                            for (var date of dates) {
+                                var status = guard.attendance[date].status ? 'Present' : 'Nil';
+                                var hours = guard.attendance[date].hours.toFixed(2);
+                                table_data += `
+                                    <td>
+                                        <select class="form-control" name="attendance[${guard.id}][${date}][status]">
+                                            <option value="1" ${guard.attendance[date].status ? 'selected' : ''}>Present</option>
+                                            <option value="0" ${!guard.attendance[date].status ? 'selected' : ''}>Nil</option>
+                                        </select>
+                                        <br/>
+                                        <label>Hours</label>
+                                        <input type="number" step="0.01" class="form-control" name="attendance[${guard.id}][${date}][hours]" value="${hours}" readonly>
+                                    </td>`;
+                            }
+                            table_data += `<td>${guard.total_hours.toFixed(2)} hrs</td></tr>`;
+                        }
+                        table_data += `
+                                </tbody>
+                            </table>
+                            <div class="form-group">
+                                <button id="save_attendance" class="btn btn-success" type="button">Update Attendance</button>
+                            </div>`;
+                        $("#guard_data").html(table_data);
+                    }
+                },
+                error: function(response) {
+                    console.error("Error in fetching guards: ", response.responseText);
+                    alert("Error in fetching guards. Please try again.");
+                }
+            });
+        });
+
+        $(document).on('click', '#save_attendance', function () {
+            $(this).text("Updating attendance data...");
+            var attendance_data = {};
+            $("select[name^='attendance']").each(function () {
+                var name = $(this).attr('name');
+                var value = $(this).val();
+
+                var parts = name.match(/attendance\[(\d+)\]\[(\d{4}-\d{2}-\d{2})\]\[status\]/);
+                var guard_id = parts[1];
+                var date = parts[2];
+
+                if (!attendance_data[guard_id]) {
+                    attendance_data[guard_id] = {};
+                }
+                if (!attendance_data[guard_id][date]) {
+                    attendance_data[guard_id][date] = {};
+                }
+                attendance_data[guard_id][date].status = value;
+            });
+
+            attendance_data = JSON.stringify(attendance_data);
+            var start_date = $("#start_date").val();
+            var end_date = $("#end_date").val();
+            var site = $("#site").val();
+            $.ajax({
+                url: "{% url 'update_attendance' %}",
+                type: 'POST',
+                data: {
+                    attendance_data: attendance_data,
+                    start_date: start_date,
+                    end_date: end_date,
+                    site: site,
+                    csrfmiddlewaretoken: csrftoken
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert("Updated");
+                    } else {
+                        alert("Error. Please try again");
+                    }
+                    location.reload();
+                },
+                error: function(response) {
+                    console.error("Error in saving attendance: ", response.responseText);
+                    alert("Error in saving attendance. Please try again.");
+                }
+            });
+        });
+    });
+</script>
+{% endblock custom_js %}

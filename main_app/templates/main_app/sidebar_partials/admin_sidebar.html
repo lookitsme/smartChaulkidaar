@@ -1,0 +1,119 @@
+{% load static %}
+<!-- Brand Logo -->
+<a href="{% url 'admin_home' %}" class="brand-link sidebar-bg">
+  <img src="{% static 'dist/img/AdminLTELogo.png' %} " alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8" />
+  <span class="brand-text font-weight-light fontblack">Admin Panel</span>
+</a>
+
+<!-- Sidebar -->
+<div class="sidebar sidebar-bg">
+  <!-- Sidebar Menu -->
+  <nav class="mt-2">
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+      <li class="nav-item fontblack">
+        {% url 'admin_home' as admin_home %}
+        <a href="{{ admin_home }}" class="nav-link {% if admin_home == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-tachometer-alt fontblack"></i>
+          <p class="fontblack">Dashboard</p>
+        </a>
+      </li>
+
+      <li class="nav-item fontblack">
+        {% url 'admin_view_profile' as admin_view_profile %}
+        <a href="{{ admin_view_profile }}" class="nav-link {% if admin_view_profile == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-user-edit fontblack"></i>
+          <p class="fontblack">View/Edit Profile</p>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link">
+          <i class="nav-icon fas fa-building fontblack"></i> <!-- Icon for Office -->
+          <p class="fontblack">
+            Guard Office
+            <i class="right fas fa-angle-left"></i>
+          </p>
+        </a>
+        <ul class="nav nav-treeview">
+          <!-- Suboption: Add Office -->
+          <li class="nav-item">
+            {% url 'add_guard_office' as add_guard_office %}
+            <a href="{{ add_guard_office }}" class="nav-link {% if add_guard_office == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-plus fontblack"></i> <!-- Icon for Add Office -->
+              <p class="fontblack">Add Guard Office</p>
+            </a>
+          </li>
+          <!-- Suboption: Manage Office -->
+          <li class="nav-item">
+            {% url 'manage_guard_office' as manage_guard_office %}
+            {% url 'edit_guard_office' guard_office_id as edit_guard_office %}
+            <a href="{{ manage_guard_office }}" class="nav-link {% if edit_guard_office == request.path or manage_guard_office == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-cogs fontblack"></i> <!-- Icon for Manage Office -->
+              <p class="fontblack">Manage Guard Office</p>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <!-- Client Section -->
+      <li class="nav-item">
+        <a href="#" class="nav-link">
+          <i class="nav-icon fas fa-user fontblack"></i>
+          <p class="fontblack">
+            Guard Office User
+            <i class="right fas fa-angle-left"></i>
+          </p>
+        </a>
+        <ul class="nav nav-treeview">
+          <li class="nav-item">
+            {% url 'add_guardofficeuser' as add_guardofficeuser %}
+            <a href="{{ add_guardofficeuser }}" class="nav-link {% if add_guardofficeuser == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-user-plus fontblack"></i> <!-- Icon for Add Client -->
+              <p class="fontblack">Add User</p>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            {% url 'manage_guardofficeuser' as manage_guardofficeuser %}
+            {% url 'edit_guardofficeuser' guardofficeuser_id as edit_guardofficeuser %}
+            <a href="{{ manage_guardofficeuser }}" class="nav-link {% if manage_guardofficeuser == request.path or request.path == edit_guardofficeuser %} active {% endif %}">
+              <i class="nav-icon fas fa-user-cog fontblack"></i> <!-- Icon for Manage Client -->
+              <p class="fontblack">Manage User</p>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <li class="nav-item">
+        <a href="#" class="nav-link">
+          <i class="nav-icon fas fa-comments fontblack"></i> <!-- Icon for Feedback -->
+          <p class="fontblack">
+            Application Feedback
+            <i class="right fas fa-angle-left"></i>
+          </p>
+        </a>
+        <ul class="nav nav-treeview">
+          <!-- Suboption: Client Feedback -->
+          <li class="nav-item">
+            {% url 'guardofficeuser_feedback_message' as guardofficeuser_feedback_message %}
+            <a href="{{ guardofficeuser_feedback_message }}" class="nav-link {% if guardofficeuser_feedback_message == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-user fontblack"></i> <!-- Icon for Client Feedback -->
+              <p class="fontblack">Guard Office Feedback</p>
+            </a>
+          </li>
+          <!-- Suboption: Guard Feedback -->
+          <li class="nav-item">
+            {% url 'guard_feedback_message' as guard_feedback_message %}
+            <a href="{{ guard_feedback_message }}" class="nav-link  {% if guard_feedback_message == request.path %} active {% endif %}">
+              <i class="nav-icon fas fa-user-shield fontblack"></i> <!-- Icon for Guard Feedback -->
+              <p class="fontblack">Guard Feedback</p>
+            </a>
+          </li>
+        </ul>
+      </li>
+      <li class="nav-item">
+        {% url 'admin_notify_guardofficeuser' as admin_notify_guardofficeuser %}
+        <a href="{{admin_notify_guardofficeuser}}" class="nav-link {% if admin_notify_guardofficeuser == request.path %} active {% endif %}">
+            <i class="nav-icon fas fa-user fontblack"></i>
+            <p class ="fontblack">Notify Guard Office</p>
+        </a>
+        </li> 

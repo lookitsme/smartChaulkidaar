@@ -1,0 +1,75 @@
+{% load static %}
+<!-- Brand Logo -->
+<a href="" class="brand-link sidebar-bg">
+  <img src="{% static 'dist/img/AdminLTELogo.png' %} " alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8" />
+  <span class="brand-text font-weight-light fontblack">Guard Panel</span>
+</a>
+
+<!-- Sidebar -->
+<div class="sidebar sidebar-bg">
+  <!-- Sidebar Menu -->
+  <nav class="mt-2">
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+      <li class="nav-item">
+        {% url 'guardofficeuser_home' as guardofficeuser_home %}
+        <a href="{{ guardofficeuser_home }}" class="nav-link {% if guardofficeuser_home == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-home fontblack"></i>
+          <p class="fontblack">Home</p>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        {% url 'guard_checkin_page' as guard_checkin_page %}
+        <a href="{{ guard_checkin_page }}" class="nav-link {% if guard_checkin_page == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-check fontblack"></i>
+          <p class="fontblack">Guard Check In</p>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        {% url 'guard_view_profile' as guard_view_profile %}
+        <a href="{{ guard_view_profile }}" class="nav-link {% if guard_view_profile == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-user fontblack"></i>
+          <p class="fontblack">View/Edit Profile</p>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        {% url 'guard_view_salary' as guard_view_salary %}
+        <a href="{{ guard_view_salary }}" class="nav-link {% if guard_view_salary == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-money-bill-wave fontblack"></i>
+          <p class="fontblack">View Salary</p>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        {% url 'guard_view_attendance' as guard_view_attendance %}
+        <a href="{{ guard_view_attendance }}" class="nav-link {% if guard_view_attendance == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-calendar-alt fontblack"></i>
+          <p class="fontblack">View Attendance</p>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        {% url 'guard_view_notification' as guard_view_notification %}
+        <a href="{{ guard_view_notification }}" class="nav-link {% if guard_view_notification == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-bell fontblack"></i>
+          <p class="fontblack">View Notifications</p>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        {% url 'guard_apply_leave' as guard_apply_leave %}
+        <a href="{{ guard_apply_leave }}" class="nav-link {% if guard_apply_leave == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-calendar-plus fontblack"></i>
+          <p class="fontblack">Apply For Leave</p>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        {% url 'guard_feedback' as guard_feedback %}
+        <a href="{{ guard_feedback }}" class="nav-link {% if guard_feedback == request.path %} active {% endif %}">
+          <i class="nav-icon fas fa-comment fontblack"></i>
+          <p class="fontblack">Application Feedback</p>
+        </a>
+      </li>

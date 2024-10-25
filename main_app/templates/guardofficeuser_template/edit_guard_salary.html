@@ -1,0 +1,118 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="card card-primary">
+                        {% comment %} <div class="card-header">
+                            <h3 class="card-title">{{page_title}}</h3>
+                        </div> {% endcomment %}
+
+                        <!-- /.card-header -->
+                        <!-- form start -->
+                        <div class="card-body">
+                            {{ form }}
+                        </div>
+                        <!-- /.card-body -->
+
+                        <div class="card-footer">
+                            <button type="submit" id='update_salary' class="btn btn-primary btn-block">Update Salary</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+    $(document).ready(function () {
+        $("#id_site").change(function () {
+            fetchEmployees();
+        });
+        $("#id_guard").change(function () {
+            fetch_guard_salary();
+        });
+        $("#id_ctc").hide();
+        $("#id_base").hide();
+        $("#update_salary").hide();
+        $('label[for="id_base"]').hide();
+        $('label[for="id_ctc"]').hide();
+
+        function fetchEmployees() {
+            var site = $("#id_site").val();
+            $("#id_guard").html(null);
+            if (site.length == 0) {
+                return false;
+            }
+            $.ajax({
+                url: "{% url 'get_guards' %}",
+                type: 'POST',
+                data: {
+                    site: site,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                }
+            }).done(function (response) {
+                if (response.length < 1) {
+                    alert("No data to display")
+                } else {
+                    var div_data = "<option>Select Employee</option>"
+                    for (var key in response) {
+                        div_data += "<option value='" + response[key]['id'] + "'>" + response[key]['name'] + " </option>"
+                    }
+                    $("#id_guard").html(div_data)
+                }
+            }).fail(function (response) {
+                alert("Error in fetching guards")
+            });
+        }
+
+        function fetch_guard_salary() {
+            var guard = $("#id_guard").val();
+            var site = $("#id_site").val();
+            $("#id_base").val(null);
+            $("#id_ctc").val(null);
+            $("#id_ctc").hide();
+            $("#update_salary").hide();
+            $("#id_base").hide();
+            $('label[for="id_base"]').hide();
+            $('label[for="id_ctc"]').hide();
+            if (guard.length == 0 || site.length == 0 || guard < 1 || site < 1) {
+                return false;
+            }
+            $.ajax({
+                url: "{% url 'fetch_guard_salary' %}",
+                type: 'POST',
+                data: {
+                    site: site,
+                    guard: guard,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                }
+            }).done(function (response) {
+                if (response == 'False') {
+                    alert("No data to display")
+                } else {
+                    $("#id_base").val(response.base);
+                    $("#id_ctc").val(response.ctc);
+                    $("#id_ctc").show();
+                    $("#id_base").show();
+                    $("#update_salary").show();
+                    $('label[for="id_base"]').show();
+                    $('label[for="id_ctc"]').show();
+                }
+            }).fail(function (response) {
+                alert("Error in fetching guard salary")
+            });
+        }
+    });
+</script>
+{% endblock custom_js %}

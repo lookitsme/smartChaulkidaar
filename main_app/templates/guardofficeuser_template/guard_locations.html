@@ -1,0 +1,220 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guard Locations</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #map-container {
+            width: 100%;
+            height: 80vh; /* Fixed height for better control */
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        #search-box {
+            margin: 10px 20px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+        }
+        #guard-search {
+            width: 200px;
+            padding: 5px;
+        }
+    </style>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+</head>
+<body>
+    <div id="search-box">
+        <input type="text" id="guard-search" placeholder="Search for a guard..." />
+    </div>
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var map = L.map('map').setView([27.691, 85.315], 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            var guardMarkers = L.markerClusterGroup({
+                spiderfyOnMaxZoom: true
+            });
+
+            var icons = {
+                green: L.icon({
+                    iconUrl: 'https://maps.gstatic.com/intl/en_us/mapfiles/ms/micons/green-dot.png',
+                    iconSize: [32, 32]
+                }),
+                yellow: L.icon({
+                    iconUrl: 'https://maps.gstatic.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png',
+                    iconSize: [32, 32]
+                }),
+                orange: L.icon({
+                    iconUrl: 'https://maps.gstatic.com/intl/en_us/mapfiles/ms/micons/orange-dot.png',
+                    iconSize: [32, 32]
+                }),
+                red: L.icon({
+                    iconUrl: 'https://maps.gstatic.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
+                    iconSize: [32, 32]
+                })
+            };
+
+            function formatTimestamp(timestamp) {
+                var date = new Date(timestamp);
+                return date.toLocaleString('en-US', {
+                    weekday: 'long', year: 'numeric', month: 'long', 
+                    day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+                });
+            }
+
+            var allGuardMarkers = [];
+            var allSiteMarkers = [];
+            var siteCircles = [];
+
+            function updateGuardLocations() {
+                fetch('/api/guard_locations/')
+                    .then(response => response.json())
+                    .then(data => {
+                        guardMarkers.clearLayers();
+                        allGuardMarkers = [];
+                        allSiteMarkers = [];
+                        siteCircles.forEach(circle => map.removeLayer(circle));
+                        siteCircles = [];
+
+                        var currentTime = new Date().getTime();
+
+                        data.guard_locations.forEach(location => {
+                            var updateTime = new Date(location.timestamp).getTime();
+                            var timeDiff = (currentTime - updateTime) / 1000;
+
+                            var icon = timeDiff <= 40 ? icons.green :
+                                       timeDiff <= 80 ? icons.yellow :
+                                       timeDiff <= 120 ? icons.orange :
+                                       icons.red;
+
+                            var marker = L.marker([location.latitude, location.longitude], { icon: icon })
+                                .bindTooltip(
+                                    `Guard Name: ${location.guard_name}<br>
+                                     Email: ${location.guard_email}<br>
+                                     Site: ${location.guard_site}<br>
+                                     Timestamp: ${formatTimestamp(location.timestamp)}`,
+                                    { permanent: false, direction: "top", offset: [0, -20] }
+                                );
+
+                            allGuardMarkers.push({ marker: marker, guard_name: location.guard_name.toLowerCase(), lat: location.latitude, lng: location.longitude });
+                            guardMarkers.addLayer(marker);
+                        });
+
+                        data.sites.forEach(site => {
+                            var radius = 50;
+                            var outerCircle = L.circle([site.latitude, site.longitude], {
+                                color: 'green',
+                                fillColor: '#30f',
+                                fillOpacity: 0.2,
+                                radius: radius
+                            }).bindTooltip(
+                                `Site Name: ${site.name}<br>Guards: ${site.guards.length} (${site.guards.join(', ')})`,
+                                { permanent: false, direction: "top", offset: [0, -radius] }
+                            );
+
+                            var innerCircle = L.circleMarker([site.latitude, site.longitude], {
+                                radius: 5,
+                                color: 'green',
+                                fillColor: 'green',
+                                fillOpacity: 1,
+                                interactive: false
+                            });
+
+                            allSiteMarkers.push({ outerCircle: outerCircle, innerCircle: innerCircle, site_name: site.name.toLowerCase(), lat: site.latitude, lng: site.longitude });
+
+                            outerCircle.addTo(map);
+                            innerCircle.addTo(map);
+
+                            outerCircle._isSiteMarker = true;
+                            innerCircle._isSiteMarker = true;
+
+                            siteCircles.push(outerCircle);
+                            siteCircles.push(innerCircle);
+                        });
+
+                        map.addLayer(guardMarkers);
+                        guardMarkers.eachLayer(layer => layer.bringToFront());
+                        siteCircles.forEach(circle => circle.bringToFront());
+                    })
+                    .catch(error => console.error('Error fetching guard locations:', error));
+            }
+
+            guardMarkers.on('clusterclick', function (a) {
+                a.layer.spiderfy();
+            });
+
+            updateGuardLocations();
+            setInterval(updateGuardLocations, 15000);
+
+            var currentTooltip = null;
+            document.getElementById('guard-search').addEventListener('input', function(e) {
+                var searchTerm = e.target.value.toLowerCase();
+                guardMarkers.clearLayers();
+
+                if (currentTooltip) {
+                    currentTooltip.closeTooltip();
+                    currentTooltip = null;
+                }
+
+                var found = false;
+                allGuardMarkers.forEach(function(guard) {
+                    if (guard.guard_name.includes(searchTerm)) {
+                        guardMarkers.addLayer(guard.marker);
+                        if (!found) {
+                            map.setView([guard.lat, guard.lng], 15);
+                            guard.marker.openTooltip();
+                            currentTooltip = guard.marker;
+                            found = true;
+                        }
+                    }
+                });
+
+                allSiteMarkers.forEach(function(site) {
+                    if (site.site_name.includes(searchTerm)) {
+                        map.addLayer(site.outerCircle);
+                        map.addLayer(site.innerCircle);
+                        if (!found) {
+                            map.setView([site.lat, site.lng], 15);
+                            site.outerCircle.openTooltip();
+                            currentTooltip = site.outerCircle;
+                            found = true;
+                        }
+                    } else {
+                        map.removeLayer(site.outerCircle);
+                        map.removeLayer(site.innerCircle);
+                    }
+                });
+
+                if (!searchTerm) {
+                    map.setView([27.691, 85.315], 12);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{% endblock content %}

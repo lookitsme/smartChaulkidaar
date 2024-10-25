@@ -1,0 +1,48 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}
+  {{ page_title }}
+{% endblock %}
+
+{% block content %}
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <!-- /.card-header -->
+            <div class="card-body">
+              <table id="example2" class="table table-bordered table-hover">
+                <thead>
+                  <tr>
+                    <th>SN</th>
+                    <th>Site Name</th>
+                    <th>Total Guards Assigned</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for site in sites %}
+                    <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td>{{ site.name }}</td>
+                      <td>{{ site.total_guards }}</td>
+                      <td>
+                        <a href="{% url 'edit_site' site.id %}" class="btn btn-primary">Edit</a>
+                        <a href="{% url 'delete_site' site.id %}" onclick="return confirm('Are you sure you want to delete this?')" class="btn btn-danger">Delete</a>
+                        <a href="{% url 'view_site_location' site.id %}" class="btn btn-info">View Location</a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="alert alert-info">
+        <strong>Available Guards:</strong> {{ unassigned_guards_count }}
+      </div>
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">{{page_title}}</h3>
+                        <div class="card-tools d-flex">
+                            <input type="text" id="search-input" class="form-control" placeholder="Search by name, email, etc.">
+                            <button id="toggle-filters" class="btn btn-secondary ml-2"><i class="fas fa-filter"></i></button>
+                        </div>
+                    </div>
+                    <div id="filter-section" class="card-body" style="display: none;">
+                        <div class="form-group">
+                            <label for="filter-site">Filter by Site:</label>
+                            <select id="filter-site" class="form-control">
+                                <option value="">All Sites</option>
+                                {% for site in sites %}
+                                <option value="{{ site.id }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-gender">Filter by Gender:</label>
+                            <select id="filter-gender" class="form-control">
+                                <option value="">All Genders</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Gender</th>
+                                    <th>Company Name</th>
+                                    <th>VAT Number</th>
+                                    <th>Site</th>
+                                    <th>Guard Office</th>
+                                    <th>Avatar</th>
+                                    <th>Edit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-table-body">
+                                {% for client in all_clients %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{client.admin.last_name}}, {{client.admin.first_name}}</td>
+                                    <td>{{client.admin.email}}</td>
+                                    <td>{{client.admin.gender}}</td>
+                                    <td>{{client.company_name}}</td>
+                                    <td>{{client.vat_number}}</td>
+                                    <td>{{client.site.name}}</td>
+                                    <td>{{client.guard_office.name}}</td>
+                                    <td>
+                                        {% if client.admin.profile_pic == "" %}
+                                        <img class="img img-fluid mb-2" height="100" width="100"
+                                            src="{% static 'admin/image/default.jpg' %}" alt="Default Profile Picture">
+                                        {% else %}
+                                        <img class="img img-fluid mb-2" height="100" width="100"
+                                            src="{{client.admin.profile_pic}}" alt="Profile Picture">
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'ceo_edit_client' client.id %}" class="btn btn-primary">Edit</a> - 
+                                        <a href="{% url 'ceo_delete_client' client.id %}" class="btn btn-danger" onclick="return confirm('Are you sure about this?')">Delete</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const tableBody = document.getElementById('clients-table-body');
+    const filterSite = document.getElementById('filter-site');
+    const filterGender = document.getElementById('filter-gender');
+    const filterSection = document.getElementById('filter-section');
+    const toggleFiltersButton = document.getElementById('toggle-filters');
+
+    toggleFiltersButton.addEventListener('click', function() {
+        if (filterSection.style.display === 'none') {
+            filterSection.style.display = 'block';
+        } else {
+            filterSection.style.display = 'none';
+        }
+    });
+
+    function fetchClients() {
+        const query = searchInput.value.toLowerCase();
+        const site = filterSite.value;
+        const gender = filterGender.value;
+
+        fetch(`/search_filter/?query=${query}&site=${site}&gender=${gender}&user_type=client`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            tableBody.innerHTML = '';
+            data.forEach((client, index) => {
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${client.full_name}</td>
+                        <td>${client.email}</td>
+                        <td>${client.gender}</td>
+                        <td>${client.company_name}</td>
+                        <td>${client.vat_number}</td>
+                        <td>${client.site}</td>
+                        <td>${client.guard_office}</td>
+                        <td>
+                            <img class="img img-fluid mb-2" height="100" width="100"
+                                src="${client.profile_pic || '{% static "admin/image/default.jpg" %}'}" alt="Profile Picture">
+                        </td>
+                        <td>
+                            <a href="/guardofficeuser/edit_client/${client.sn}" class="btn btn-primary">Edit</a> -
+                            <a href="/guardofficeuser/delete_client/${client.sn}" class="btn btn-danger" onclick="return confirm('Are you sure about this ?')}">Delete</a>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        });
+    }
+
+    searchInput.addEventListener('keyup', fetchClients);
+    filterSite.addEventListener('change', fetchClients);
+    filterGender.addEventListener('change', fetchClients);
+});
+</script>
+{% endblock custom_js %}

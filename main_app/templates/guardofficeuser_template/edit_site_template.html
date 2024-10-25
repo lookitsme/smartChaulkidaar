@@ -1,0 +1,137 @@
+{% extends 'main_app/base.html' %}
+{% load custom_filters %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <!-- general form elements -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ page_title }}</h3>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="form-group position-relative">
+                                {{ form.name.label_tag }}
+                                <div class="input-group">
+                                    {{ form.name|add_class:"form-control" }}
+                                    <div class="input-group-append">
+                                        <button id="change-name-btn" type="button" class="btn btn-outline-secondary" style="display: none;">Change Name</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                {{ form.radius.label_tag }} (in meters)
+                                <div class="input-group">
+                                    {{ form.radius|add_class:"form-control" }}
+                                </div>
+                                <input type="range" id="radiusRange" min="1" max="1000" value="{{ form.instance.radius }}" class="form-control mt-2">
+                            </div>
+                            <div class="form-group" style="display:none;">
+                                {{ form.latitude }}
+                                {{ form.longitude }}
+                                {{ form.guard_office }}
+                            </div>
+                            <div class="form-group">
+                                <label for="map">Pinpoint Site Location:</label>
+                                <div id="map" style="height: 400px; width: 100%; border: 1px solid #ddd;"></div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a href="{% url 'manage_site' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([{{ form.instance.latitude }}, {{ form.instance.longitude }}], 13);  // Default to the site's current location
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+    }).addTo(map);
+
+    var marker = L.marker([{{ form.instance.latitude }}, {{ form.instance.longitude }}]).addTo(map);
+    var radiusCircle = L.circle([{{ form.instance.latitude }}, {{ form.instance.longitude }}], {
+        radius: {{ form.instance.radius }},
+        color: 'blue',
+        fillColor: 'blue',
+        fillOpacity: 0.5
+    }).addTo(map);
+
+    map.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng).addTo(map);
+        }
+
+        document.getElementById('id_latitude').value = lat;
+        document.getElementById('id_longitude').value = lng;
+
+        // Update the circle's position
+        radiusCircle.setLatLng(e.latlng);
+
+        // Reverse geocoding to get place name
+        var reverseGeocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+
+        fetch(reverseGeocodingUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    var placeName = data.display_name.split(',')[0];  // Use only the first part of the address
+                    document.getElementById('{{ form.name.id_for_label }}').value = placeName;
+                    document.getElementById('change-name-btn').style.display = 'inline-block';  // Show the Change Name button
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching location name:', error);
+            });
+    });
+
+    // Update the radius dynamically
+    document.getElementById('id_radius').addEventListener('input', function() {
+        var newRadius = parseFloat(this.value);
+        if (!isNaN(newRadius) && radiusCircle) {
+            radiusCircle.setRadius(newRadius);
+            document.getElementById('radiusRange').value = newRadius;
+        }
+    });
+
+    document.getElementById('radiusRange').addEventListener('input', function() {
+        var newRadius = parseFloat(this.value);
+        if (!isNaN(newRadius) && radiusCircle) {
+            radiusCircle.setRadius(newRadius);
+            document.getElementById('id_radius').value = newRadius;
+        }
+    });
+
+    // Enable editing of the name field when the Change Name button is clicked
+    document.getElementById('change-name-btn').addEventListener('click', function() {
+        var nameField = document.getElementById('{{ form.name.id_for_label }}');
+        nameField.removeAttribute('readonly');
+        nameField.focus();
+    });
+
+    // Hide the Change Name button when the name field is edited manually
+    document.getElementById('{{ form.name.id_for_label }}').addEventListener('input', function() {
+        document.getElementById('change-name-btn').style.display = 'none';
+    });
+</script>
+
+{% endblock content %}

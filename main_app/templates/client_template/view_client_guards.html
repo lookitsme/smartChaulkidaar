@@ -1,0 +1,220 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Guards Assigned to Your Sites</h3>
+                        <div class="card-tools">
+                            <div class="input-group input-group-sm" style="width: 250px;">
+                                <input type="text" id="search-input" class="form-control float-right" placeholder="Search">
+                                <div class="input-group-append">
+                                    <button class="btn btn-default">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Guard Office Name</th>
+                                    <th>Site</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="guard-results">
+                                {% for guard in guards %}
+                                <tr>
+                                    <td>{{ guard.admin.first_name }} {{ guard.admin.last_name }}</td>
+                                    <td>{{ guard.admin.email }}</td>
+                                    <td>{{ guard.guard_office.name }}</td>
+                                    <td>{{ guard.site.name }}</td>
+                                    <td>
+                                        <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#complaintModal" data-guard-id="{{ guard.id }}" data-guard-name="{{ guard.admin.first_name }} {{ guard.admin.last_name }}">Add Complaint</button>
+                                        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#reviewModal" data-guard-id="{{ guard.id }}" data-guard-name="{{ guard.admin.first_name }} {{ guard.admin.last_name }}">Add Review</button>
+                                        <a href="{% url 'view_guard_profile' guard.id %}" class="btn btn-info btn-sm">View Profile</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+
+    <!-- Complaint Modal -->
+    <div class="modal fade" id="complaintModal" tabindex="-1" role="dialog" aria-labelledby="complaintModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="complaintModalLabel">Add Complaint</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="complaintForm" method="post" action="{% url 'submit_complaint' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <input type="hidden" name="guard_id" id="guard-id">
+                        <div class="form-group">
+                            <label for="guard-name">Guard</label>
+                            <input type="text" class="form-control" id="guard-name" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea class="form-control" id="description" name="description" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit Complaint</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" role="dialog" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewModalLabel">Add Review</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="reviewForm" method="post" action="{% url 'submit_review' %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <input type="hidden" name="guard_id" id="review-guard-id">
+                        <div class="form-group">
+                            <label for="review-guard-name">Guard</label>
+                            <input type="text" class="form-control" id="review-guard-name" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="rating">Rating</label>
+                            <div class="star-rating">
+                                {% for i in 5|range_filter %}
+                                <i class="far fa-star" data-value="{{ i }}"></i>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="rating" id="rating" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="review">Review (optional)</label>
+                            <textarea class="form-control" id="review" name="review"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var searchInput = document.getElementById('search-input');
+
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    function searchGuards() {
+        var query = searchInput.value;
+
+        fetch(`{% url 'ajax_search_guards' %}?q=${query}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            var results = data.results;
+            var resultsContainer = document.getElementById('guard-results');
+            resultsContainer.innerHTML = '';
+
+            results.forEach(guard => {
+                var row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${guard.full_name}</td>
+                    <td>${guard.email}</td>
+                    <td>${guard.guard_office_name}</td>
+                    <td>${guard.site_name}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" data-toggle="modal" data-target="#complaintModal" data-guard-id="${guard.id}" data-guard-name="${guard.full_name}">Add Complaint</button>
+                        <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#reviewModal" data-guard-id="${guard.id}" data-guard-name="${guard.full_name}">Add Review</button>
+                        <a href="/guard/profile/${guard.id}" class="btn btn-info btn-sm">View Profile</a>
+                    </td>
+                `;
+                resultsContainer.appendChild(row);
+            });
+        });
+    }
+
+    searchInput.addEventListener('keyup', debounce(searchGuards, 300));
+
+    $('#complaintModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var guardId = button.data('guard-id');
+        var guardName = button.data('guard-name');
+
+        var modal = $(this);
+        modal.find('#guard-id').val(guardId);
+        modal.find('#guard-name').val(guardName);
+    });
+
+    $('#reviewModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var guardId = button.data('guard-id');
+        var guardName = button.data('guard-name');
+
+        var modal = $(this);
+        modal.find('#review-guard-id').val(guardId);
+        modal.find('#review-guard-name').val(guardName);
+    });
+
+    document.querySelectorAll('.star-rating i').forEach(star => {
+        star.addEventListener('click', function() {
+            var rating = this.getAttribute('data-value');
+            document.getElementById('rating').value = rating;
+            var stars = this.parentNode.querySelectorAll('i');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas');
+                } else {
+                    star.classList.remove('fas');
+                    star.classList.add('far');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock custom_js %}

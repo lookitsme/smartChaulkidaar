@@ -1,0 +1,45 @@
+<!-- review_form.html -->
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}Submit Review{% endblock page_title %}
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Submit Review</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'submit_review' %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="guard_id">Guard</label>
+                                <select id="guard_id" name="guard_id" class="form-control" required>
+                                    {% for guard in guards %}
+                                    <option value="{{ guard.id }}">{{ guard.admin.first_name }} {{ guard.admin.last_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="rating">Rating</label>
+                                <select id="rating" name="rating" class="form-control" required>
+                                    {% for i in 5|range_filter %}
+                                    <option value="{{ i }}">{{ i }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="review">Review</label>
+                                <textarea id="review" name="review" class="form-control"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}

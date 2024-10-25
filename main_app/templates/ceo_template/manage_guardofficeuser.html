@@ -1,0 +1,57 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}
+  {{ page_title }}
+{% endblock %}
+
+{% block content %}
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <!-- /.card-header -->
+            <div class="card-body">
+              <table id="example2" class="table table-bordered table-hover">
+                <thead>
+                  <tr>
+                    <th>SN</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Gender</th>
+                    <th>Guard Office</th>
+                    <th>Edit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for guardofficeuser in allguardofficeuser %}
+                    <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td>
+                        <span>
+                          {% if guardofficeuser.profile_pic == '' %}
+                            <img class="img img-fluid mb-2 profile" height="50" width="50" src="{% static 'admin/image/default.jpg' %}" alt="Default Profile Picture" />
+                          {% else %}
+                            <img class="img img-fluid mb-2 profile" height="50" width="50" src="{{ guardofficeuser.profile_pic }}" alt="Profile Picture" />
+                          {% endif %}
+                        </span>
+                        {{ guardofficeuser.last_name }}, {{ guardofficeuser.first_name }}
+                      </td>
+                      <td>{{ guardofficeuser.email }}</td>
+                      <td>{{ guardofficeuser.gender }}</td>
+                      <td>{{ guardofficeuser.guardofficeuser.guard_office.name }}</td>
+                      <td>
+                        <a href="{% url 'edit_guardofficeuser' guardofficeuser.guardofficeuser.id %}" class="btn btn-primary">Edit</a> -
+                        <a href="{% url 'delete_guardofficeuser' guardofficeuser.guardofficeuser.id %}" class="btn btn-danger" onclick="return confirm('Are you sure about this ?')">Delete</a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

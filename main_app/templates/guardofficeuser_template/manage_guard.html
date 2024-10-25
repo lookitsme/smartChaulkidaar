@@ -1,0 +1,215 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-tools d-flex">
+                            <input type="text" id="search-input" class="form-control" placeholder="Search by name, email, etc.">
+                            <button id="toggle-filters" class="btn btn-secondary ml-2"><i class="fas fa-filter"></i></button>
+                        </div>
+                    </div>
+                    <div id="filter-section" class="card-body" style="display: none;">
+                        <div class="form-group">
+                            <label for="filter-site">Filter by Site:</label>
+                            <select id="filter-site" class="form-control">
+                                <option value="">All Sites</option>
+                                {% for site in sites %}
+                                <option value="{{ site.name }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filter-gender">Filter by Gender:</label>
+                            <select id="filter-gender" class="form-control">
+                                <option value="">All Genders</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                            </select>
+                        </div>
+                        <button id="reset-filters" class="btn btn-warning">Reset Filters</button>
+                    </div>
+                    <div class="card-body">
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="select-all"></th>
+                                    <th>SN</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Gender</th>
+                                    <th>Guard Office</th>
+                                    <th>Site</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="guards-table-body">
+                                {% for guard in guards %}
+                                <tr>
+                                    <td><input type="checkbox" class="select-guard" value="{{ guard.guard.id }}"></td>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <div class="profile">
+
+                                            {% if guard.profile_pic == "" %}
+                                            <img class="img img-fluid mb-2" height="100" width="100"
+                                                src="{% static 'admin/image/default.jpg' %}" alt="Default Profile Picture">
+                                            {% else %}
+                                            <img class="img img-fluid mb-2" height="100" width="100"
+                                                src="{{guard.profile_pic}}" alt="Profile Picture">
+                                            {% endif %}
+                                        </div>
+                                        
+                                        {{guard.last_name}}, {{guard.first_name}}</td>
+                                    <td>{{guard.email}}</td>
+                                    <td>{{guard.gender}}</td>
+                                    <td>{{guard.guard.guard_office.name}}</td>
+                                    <td>{{guard.guard.site.name}}</td>
+                                    
+                                    <td>
+                                        <a href="{% url 'guardofficeuser_edit_guard' guard.guard.id %}" class="btn btn-primary">Edit</a> -
+                                        <a href="{% url 'guardofficeuser_delete_guard' guard.guard.id %}" class="btn btn-danger" onclick="return confirm('Are you sure about this ?')">Delete</a>
+                                        <a href="{% url 'view_guard_profile' guard.guard.id %}" class="btn btn-info">View Profile</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="form-group mt-3">
+                            <label for="assign-site">Assign to Site:</label>
+                            <select id="assign-site" class="form-control">
+                                <option value="">Select Site</option>
+                                {% for site in sites %}
+                                <option value="{{ site.id }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button id="assign-guards" class="btn btn-success mt-2">Assign Guards</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const tableBody = document.getElementById('guards-table-body');
+    const filterSite = document.getElementById('filter-site');
+    const filterGender = document.getElementById('filter-gender');
+    const filterSection = document.getElementById('filter-section');
+    const toggleFiltersButton = document.getElementById('toggle-filters');
+    const resetFiltersButton = document.getElementById('reset-filters');
+    const assignSite = document.getElementById('assign-site');
+    const assignGuardsButton = document.getElementById('assign-guards');
+    const selectAllCheckbox = document.getElementById('select-all');
+
+    toggleFiltersButton.addEventListener('click', function() {
+        if (filterSection.style.display === 'none') {
+            filterSection.style.display = 'block';
+        } else {
+            filterSection.style.display = 'none';
+        }
+    });
+
+    function fetchGuards() {
+        const query = searchInput.value.toLowerCase();
+        const site = filterSite.value;
+        const gender = filterGender.value;
+        const params = new URLSearchParams({
+            query: query,
+            site: site,
+            gender: gender,
+            user_type: 'guard'
+        });
+
+        fetch(`/search_filter/?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            tableBody.innerHTML = '';
+            data.forEach((guard, index) => {
+                const row = `
+                    <tr>
+                        <td><input type="checkbox" class="select-guard" value="${guard.sn}"></td>
+                        <td>${index + 1}</td>
+                        <td>${guard.full_name}</td>
+                        <td>${guard.email}</td>
+                        <td>${guard.gender}</td>
+                        <td>${guard.guard_office}</td>
+                        <td>${guard.site}</td>
+                        <td>
+                            <img class="img img-fluid mb-2" height="100" width="100"
+                                src="${guard.profile_pic || '{% static "admin/image/default.jpg" %}'}" alt="Profile Picture">
+                        </td>
+                        <td>
+                            <a href="/guardofficeuser/edit_guard/${guard.sn}" class="btn btn-primary">Edit</a> -
+                            <a href="/guardofficeuser/delete_guard/${guard.sn}" class="btn btn-danger" onclick="return confirm('Are you sure about this ?')}">Delete</a>
+                            <a href="/guard/profile/${guard.sn}" class="btn btn-info">View Profile</a>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        });
+    }
+
+    searchInput.addEventListener('keyup', fetchGuards);
+    filterSite.addEventListener('change', fetchGuards);
+    filterGender.addEventListener('change', fetchGuards);
+
+    resetFiltersButton.addEventListener('click', function() {
+        searchInput.value = '';
+        filterSite.value = '';
+        filterGender.value = '';
+        fetchGuards();
+    });
+
+    selectAllCheckbox.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.select-guard');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+    });
+
+    assignGuardsButton.addEventListener('click', function() {
+        const selectedGuards = Array.from(document.querySelectorAll('.select-guard:checked')).map(cb => cb.value);
+        const siteId = assignSite.value;
+
+        if (selectedGuards.length === 0 || !siteId) {
+            alert('Please select guards and a site to assign.');
+            return;
+        }
+
+        fetch('/assign_guards_to_site/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ guards: selectedGuards, site_id: siteId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Guards assigned successfully.');
+                fetchGuards();
+            } else {
+                alert('There was an error assigning guards.');
+            }
+        });
+    });
+});
+</script>
+{% endblock custom_js %}

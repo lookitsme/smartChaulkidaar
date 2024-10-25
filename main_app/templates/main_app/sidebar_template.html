@@ -1,0 +1,33 @@
+{% load static %}
+
+
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+{% if request.user.user_type == '1' %}
+    {% include 'main_app/sidebar_partials/admin_sidebar.html' %}
+
+{% elif request.user.user_type == '2' %}
+    {% include 'main_app/sidebar_partials/guardofficeuser_sidebar.html' %}
+                
+{% elif request.user.user_type == '3' %}
+    {% include 'main_app/sidebar_partials/guard_sidebar.html' %}
+  
+{% elif request.user.user_type == '4' %}
+    {% include 'main_app/sidebar_partials/client_sidebar.html' %}
+
+{% endif %}
+
+<li class="nav-item">
+    <a href="{% url 'user_logout' %}" onclick="return confirm('Your session would be terminated.\n\nProceed?')" class="nav-link">
+        <i class="nav-icon fas fa-sign-out-alt fontblack"></i> <!-- Icon for Logout -->
+        <p class ="fontblack">
+            Logout
+        </p>
+    </a>
+</li>
+
+</ul>
+</nav>
+<!-- /.sidebar-menu -->
+</div>
+<!-- /.sidebar -->
+</aside>

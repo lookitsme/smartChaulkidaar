@@ -1,0 +1,43 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{page_title}}{% endblock page_title %}
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Guards on Leave</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Guard Office Name</th>
+                                    <th>Leave Dates</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for leave in all_leaves %}
+                                <tr>
+                                    <td>{{ leave.guard.admin.first_name }} {{ leave.guard.admin.last_name }}</td>
+                                    <td>{{ leave.guard.admin.email }}</td>
+                                    <td>{{ leave.guard.guard_office.name }}</td>
+                                    <td>{{ leave.date }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+{% endblock content %}

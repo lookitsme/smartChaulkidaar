@@ -1,0 +1,98 @@
+{% extends 'main_app/base.html' %}
+{% block page_title %}
+  Guard Attendance Logs
+{% endblock %}
+{% block content %}
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            {% comment %} <div class="card-header">
+              <h3 class="card-title">Guard Attendance Logs</h3>
+            </div> {% endcomment %}
+            <!-- /.card-header -->
+            <div class="card-body">
+              {% if logs %}
+                <table class="table table-bordered table-striped">
+                  <thead>
+                    <tr>
+                      <th>Guard</th>
+                      <th>Check-in Time</th>
+                      <th>Check-out Time</th>
+                      <th>Duration</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for log in logs %}
+                      <tr>
+                        <td>{{ log.guard.admin.email }}</td>
+                        <td>{{ log.check_in_time }}</td>
+                        <td>{{ log.check_out_time }}</td>
+                        <td>{{ log.duration }}</td>
+                        <td class="status">
+                          {% if log.check_out_time == None %}
+                            <span class="badge badge-warning">Not Checked Out</span>
+                          {% elif not log.is_approved %}
+                            <span class="badge badge-info">Pending Approval</span>
+                          {% else %}
+                            <span class="badge badge-success">Approved</span>
+                          {% endif %}
+                        </td>
+                        <td class="actions">
+                          {% if log.check_out_time and not log.is_approved %}
+                            <button class="btn btn-success approve-log-btn" data-log-id="{{ log.id }}" data-action="approve">Approve</button>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              {% else %}
+                <p>No guard logs available for approval.</p>
+              {% endif %}
+            </div>
+            <!-- /.card-body -->
+          </div>
+          <!-- /.card -->
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block custom_js %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const approveButtons = document.querySelectorAll('.approve-log-btn')
+    
+      approveButtons.forEach((button) => {
+        button.addEventListener('click', function () {
+          const logId = this.getAttribute('data-log-id')
+    
+          fetch(`/approve_attendance_log/${logId}/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+            }
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                alert(data.message)
+                location.reload()
+              } else {
+                alert(data.message || 'Failed to approve attendance log.')
+              }
+            })
+            .catch((error) => {
+              console.error('Error:', error)
+            })
+        })
+      })
+    })
+  </script>
+{% endblock %}

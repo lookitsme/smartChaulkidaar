@@ -1,0 +1,149 @@
+{% extends 'main_app/base.html' %}
+{% load custom_filters %}
+{% load static %}
+{% block page_title %}
+  {{ page_title }}
+{% endblock %}
+
+{% block content %}
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <!-- general form elements -->
+          <div class="card card-primary">
+            <form method="post">
+              {% csrf_token %}
+              <div class="card-body">
+                <div class="form-group">
+                  {{ form.name.label_tag }}
+                  <div class="input-group">{{ form.name|add_class:'form-control' }}</div>
+                </div>
+                <div class="form-group">
+                  <label for="id_radius">Radius (in meters):</label>
+                  <div class="input-group">{{ form.radius|add_class:'form-control' }}</div>
+                  <input type="range" id="radiusRange" min="1" max="{{ max_radius }}" value="{{ form.instance.radius }}" class="form-control mt-2" />
+                </div>
+                <div class="form-group" style="display:none;">{{ form.latitude }}
+                  {{ form.longitude }}
+                  {{ form.guard_office }}</div>
+                <div class="form-group">
+                  <label for="map">Pinpoint Site Location:</label>
+                  <div id="map" style="height: 400px; width: 100%; border: 1px solid #ddd;"></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <button type="submit" class="btn btn-primary">Add Site</button>
+              </div>
+            </form>
+          </div>
+          <!-- /.card -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+  <script>
+    var map = L.map('map').setView([27.7172, 85.324], 13) // Default view to Kathmandu
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18
+    }).addTo(map)
+    
+    var marker
+    var circle
+    
+    map.on('click', function (e) {
+      var lat = e.latlng.lat
+      var lng = e.latlng.lng
+      var radius = document.getElementById('id_radius').value
+    
+      if (marker) {
+        marker.setLatLng(e.latlng)
+      } else {
+        marker = L.marker(e.latlng).addTo(map)
+      }
+    
+      if (circle) {
+        circle.setLatLng(e.latlng)
+        circle.setRadius(radius)
+      } else {
+        circle = L.circle(e.latlng, { radius: radius, color: 'blue', fillColor: 'blue', fillOpacity: 0.5 }).addTo(map)
+      }
+    
+      document.getElementById('id_latitude').value = lat
+      document.getElementById('id_longitude').value = lng
+    
+      // Reverse geocoding to get place name
+      var reverseGeocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+    
+      fetch(reverseGeocodingUrl)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data && data.display_name) {
+            var placeName = data.display_name.split(',')[0] // Use only the first part of the address
+            document.getElementById('{{ form.name.id_for_label }}').value = placeName
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching location name:', error)
+        })
+    })
+    
+    document.getElementById('{{ form.name.id_for_label }}').addEventListener('input', function () {
+      var siteName = this.value
+      if (siteName.length > 3) {
+        // To avoid too many requests, search after 3 characters
+        var nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(siteName)}&viewbox=80.0586235282,30.4227169866,88.201,26.347&bounded=1&countrycodes=np`
+    
+        fetch(nominatimUrl)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data && data.length > 0) {
+              var lat = data[0].lat
+              var lon = data[0].lon
+              map.setView([lat, lon], 13)
+    
+              if (marker) {
+                marker.setLatLng([lat, lon])
+              } else {
+                marker = L.marker([lat, lon]).addTo(map)
+              }
+    
+              if (circle) {
+                circle.setLatLng([lat, lon])
+                circle.setRadius(document.getElementById('id_radius').value)
+              } else {
+                circle = L.circle([lat, lon], { radius: document.getElementById('id_radius').value, color: 'blue', fillColor: 'blue', fillOpacity: 0.5 }).addTo(map)
+              }
+    
+              document.getElementById('id_latitude').value = lat
+              document.getElementById('id_longitude').value = lon
+            }
+          })
+          .catch((error) => {
+            console.error('Error fetching location data:', error)
+          })
+      }
+    })
+    
+    // Synchronize the radius range and text input fields
+    var radiusInput = document.getElementById('id_radius')
+    var radiusRange = document.getElementById('radiusRange')
+    
+    radiusInput.addEventListener('input', function () {
+      radiusRange.value = this.value
+      if (circle) {
+        circle.setRadius(this.value)
+      }
+    })
+    
+    radiusRange.addEventListener('input', function () {
+      radiusInput.value = this.value
+      if (circle) {
+        circle.setRadius(this.value)
+      }
+    })
+  </script>
+{% endblock %}

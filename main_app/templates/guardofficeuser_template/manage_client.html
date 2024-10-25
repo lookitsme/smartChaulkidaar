@@ -1,0 +1,159 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}{{ page_title }}{% endblock page_title %}
+
+{% block content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-tools d-flex">
+                            <input type="text" id="search-input" class="form-control" placeholder="Search by name, email, VAT number, etc.">
+                            <button id="toggle-filters" class="btn btn-secondary ml-2"><i class="fas fa-filter"></i></button>
+                        </div>
+                    </div>
+                    <div id="filter-section" class="card-body" style="display: none;">
+                        <div class="form-group">
+                            <label for="filter-site">Filter by Site:</label>
+                            <select id="filter-site" class="form-control">
+                                <option value="">All Sites</option>
+                                {% for site in sites %}
+                                <option value="{{ site.name }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button id="reset-filters" class="btn btn-warning">Reset Filters</button>
+                    </div>
+                    <div class="card-body">
+                        <table id="example2" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SN</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Gender</th>
+                                    <th>Company Name</th>
+                                    <th>VAT Number</th>
+                                    <th>Site</th>
+                                    <th>Guard Office</th>
+                                    <th>Edit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-table-body">
+                                {% for client in all_clients %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ client.admin.last_name }}, {{ client.admin.first_name }}</td>
+                                    <td>{{ client.admin.email }}</td>
+                                    <td>{{ client.admin.get_gender_display }}</td>
+                                    <td>{{ client.company_name }}</td>
+                                    <td>{{ client.vat_number }}</td>
+                                    <td>{{ client.site.name }}</td>
+                                    <td>{{ client.guard_office.name }}</td>
+                                    <td>
+                                        {% if not client.admin.profile_pic %}
+                                        <img class="img img-fluid mb-2" height="100" width="100"
+                                            src="{% static 'admin/image/default.jpg' %}" alt="Default Profile Picture">
+                                        {% else %}
+                                        <img class="img img-fluid mb-2" height="100" width="100"
+                                            src="{{ client.admin.profile_pic.url }}" alt="Profile Picture">
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'guardofficeuser_edit_client' client.id %}" class="btn btn-primary">Edit</a>
+                                        <a href="{% url 'guardofficeuser_delete_client' client.id %}" class="btn btn-danger" onclick="return confirm('Are you sure about this?')">Delete</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+{% block custom_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-input');
+    const tableBody = document.getElementById('clients-table-body');
+    const filterSite = document.getElementById('filter-site');
+    const filterSection = document.getElementById('filter-section');
+    const toggleFiltersButton = document.getElementById('toggle-filters');
+    const resetFiltersButton = document.getElementById('reset-filters');
+
+    toggleFiltersButton.addEventListener('click', function() {
+        if (filterSection.style.display === 'none') {
+            filterSection.style.display = 'block';
+        } else {
+            filterSection.style.display = 'none';
+        }
+    });
+
+    function fetchResults() {
+        const query = searchInput.value.toLowerCase();
+        const site = filterSite.value;
+        const user_type = 'client';
+
+        const params = new URLSearchParams({
+            query: query,
+            site: site,
+            user_type: user_type
+        });
+
+        fetch(`/search_filter/?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            tableBody.innerHTML = '';
+            data.forEach((item, index) => {
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            <div class='profile'> 
+                            <img class="img img-fluid mb-2" height="100" width="100"
+                                src="${item.profile_pic || '{% static "admin/image/default.jpg" %}'}" alt="Profile Picture">
+                            </div>
+                        
+                        ${item.full_name}</td>
+                        <td>${item.email}</td>
+                        <td>${item.gender}</td>
+                        <td>${item.company_name}</td>
+                        <td>${item.vat_number}</td>
+                        <td>${item.site}</td>
+                        <td>${item.guard_office}</td>
+                        
+                        <td>
+                            <a href="/guardofficeuser/client/edit/${item.sn}" class="btn btn-primary">Edit</a>
+                            <a href="/guardofficeuser/client/delete/${item.sn}" class="btn btn-danger" onclick="return confirm('Are you sure about this ?')}">Delete</a>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        });
+    }
+
+    searchInput.addEventListener('keyup', fetchResults);
+    filterSite.addEventListener('change', fetchResults);
+
+    resetFiltersButton.addEventListener('click', function() {
+        searchInput.value = '';
+        filterSite.value = '';
+        fetchResults();
+    });
+
+    // Initial fetch to populate the table
+    fetchResults();
+});
+</script>
+{% endblock custom_js %}

@@ -1,0 +1,42 @@
+{% extends 'main_app/base.html' %}
+{% load static %}
+{% block page_title %}
+  {{ page_title }}
+{% endblock %}
+
+{% block content %}
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <!-- /.card-header -->
+            <div class="card-body">
+              <table id="example2" class="table table-bordered table-hover">
+                <thead>
+                  <tr>
+                    <th>SN</th>
+                    <th>Guard Office Name</th>
+                    <th>Edit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for guard_office in guard_offices %}
+                    <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td>{{ guard_office.name }}</td>
+                      <td>
+                        <a href="{% url 'edit_guard_office' guard_office.id %}" class="btn btn-primary">Edit</a> -
+                        <a href="{% url 'delete_guard_office' guard_office.id %}" onclick="return confirm('Are you sure you want to delete this guard office ?')" class="btn btn-danger">Delete</a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
