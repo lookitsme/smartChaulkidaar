@@ -5,7 +5,7 @@ To set up this project on your local machine, follow these steps:
 
 Clone the repository:
 ```bash
-git clone https://github.com/CodeCraftersNP/smartChaukidaar.git
+git clone https://github.com/lookitsme/smartChaulkidaar.git
 ```
 
 Open Docker and in the cmd run 
