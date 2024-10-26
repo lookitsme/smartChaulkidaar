@@ -102,7 +102,6 @@ def add_guard(request):
             password = guard_form.cleaned_data.get('password')
             guard_office = guard_form.cleaned_data.get('guard_office')
             site = guard_form.cleaned_data.get('site')
-            # position = guard_form.cleaned_data.get('position')
             try:
                 passport = request.FILES['profile_pic']
                 fs = FileSystemStorage()
@@ -166,7 +165,7 @@ def add_guard_bulk(request):
                 email = row.get('email')
                 gender = gender_map.get(row.get('gender', '').lower(), 'M')  # Map gender to 'M' or 'F'
                 address = row.get('address', '')
-                password = '123'  # Default password, consider generating a secure password
+                password = '123'  
                 
                 if not email:
                     continue
@@ -281,13 +280,6 @@ def manage_guardofficeuser(request):
     return render(request, "ceo_template/manage_guardofficeuser.html", context)
 
 
-# def manage_guard(request):
-#     guards = CustomUser.objects.filter(user_type=3)
-#     context = {
-#         'guards': guards,
-#         'page_title': 'Manage Guards'
-#     }
-#     return render(request, "ceo_template/manage_guard.html", context)
 def manage_guard(request):
     user = request.user
 
@@ -301,7 +293,7 @@ def manage_guard(request):
             guardofficeuser_guard_office = guardofficeuser.guard_office
         except GuardOfficeUser.DoesNotExist:
             messages.error(request, "Current user is not associated with a guard office user.")
-            return redirect('manage_guard')  # Replace with your error page or desired behavior
+            return redirect('manage_guard')  
 
         guards = CustomUser.objects.filter(user_type=3, guard__guard_office=guardofficeuser_guard_office)
         sites = Site.objects.filter(guard_office=guardofficeuser_guard_office)
@@ -508,7 +500,7 @@ def guard_feedback_message(request):
 
             return JsonResponse({'status': 'success'})
         except Exception as e:
-            print(f"Error: {e}")  # Log the error for debugging
+            print(f"Error: {e}") 
             return JsonResponse({'status': 'error', 'message': str(e)})
 
 
@@ -537,7 +529,7 @@ def guardofficeuser_feedback_message(request):
             
             return JsonResponse({'status': 'success'})
         except Exception as e:
-            print(f"Error: {e}")  # Log the error for debugging
+            print(f"Error: {e}") 
             return JsonResponse({'status': 'error', 'message': str(e)})
         
 @csrf_exempt
