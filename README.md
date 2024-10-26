@@ -10,7 +10,7 @@ git clone https://github.com/lookitsme/smartChaulkidaar.git
 
 Open Docker and in the cmd run 
 ```bash
-Docker Compose up
+docker compose up
 ```
 
 If you dont have docker you can run it as follows:
